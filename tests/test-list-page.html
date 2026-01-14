@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试页面 - 列表页面</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .articles {
+      display: grid;
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .article-item {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .article-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .article-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .article-summary {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    .article-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: #999;
+    }
+    .article-author {
+      color: #1a73e8;
+    }
+    .article-link {
+      color: #1a73e8;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .article-link:hover {
+      text-decoration: underline;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0;
+    }
+    .page-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:hover {
+      background: #1a73e8;
+      color: white;
+      border-color: #1a73e8;
+    }
+    .page-btn.active {
+      background: #1a73e8;
+      color: white;
+      border-color: #1a73e8;
+    }
+    .page-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .page-btn.disabled:hover {
+      background: white;
+      color: #333;
+      border-color: #ddd;
+    }
+    .page-info {
+      text-align: center;
+      color: #666;
+      margin: 20px 0;
+    }
+    .instructions {
+      background: #e8f4fd;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 30px 0;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #1a73e8;
+    }
+    .instructions pre {
+      background: white;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>技术文章列表</h1>
+  
+  <div class="page-info">
+    当前第 <span id="currentPage">1</span> 页，共 3 页
+  </div>
+
+  <div class="articles" id="articleList">
+    <!-- 文章列表将通过 JavaScript 动态生成 -->
+  </div>
+
+  <div class="pagination">
+    <button class="page-btn" id="prevBtn" onclick="prevPage()">上一页</button>
+    <button class="page-btn active" onclick="goToPage(1)">1</button>
+    <button class="page-btn" onclick="goToPage(2)">2</button>
+    <button class="page-btn" onclick="goToPage(3)">3</button>
+    <button class="page-btn next-page" id="nextBtn" onclick="nextPage()">下一页</button>
+  </div>
+
+  <div class="instructions">
+    <h3>测试配置（列表页面）</h3>
+    <p>在扩展中使用以下配置来抓取此列表页面的数据：</p>
+    <pre>{
+  "container": ".article-item",
+  "next_button": ".next-page",
+  "max_page": 3,
+  "field": {
+    "标题": ".article-title",
+    "摘要": ".article-summary",
+    "作者": ".article-author",
+    "日期": ".article-date",
+    "链接": ".article-link@href"
+  }
+}</pre>
+    
+    <h3>测试步骤：</h3>
+    <ol>
+      <li>确保当前在第 1 页</li>
+      <li>打开 Chrome 扩展</li>
+      <li>选择"列表页面"模式</li>
+      <li>粘贴上面的配置</li>
+      <li>点击"开始抓取列表"</li>
+      <li>观察扩展自动翻页并抓取数据</li>
+    </ol>
+    
+    <h3>预期结果：</h3>
+    <p>应该抓取到 3 页共 15 条文章数据（每页 5 条）</p>
+  </div>
+
+  <script>
+    // 模拟文章数据
+    const articles = [
+      // 第1页
+      [
+        { title: 'JavaScript 异步编程完全指南', summary: '深入探讨 JavaScript 中的异步编程模式，包括回调、Promise、async/await 等现代异步解决方案。', author: '李明', date: '2026-01-10', url: 'https://example.com/article/1' },
+        { title: 'React 18 新特性详解', summary: '全面介绍 React 18 的新特性，包括并发渲染、自动批处理、Suspense 改进等重要更新。', author: '王芳', date: '2026-01-09', url: 'https://example.com/article/2' },
+        { title: 'TypeScript 高级类型技巧', summary: '探索 TypeScript 的高级类型系统，学习如何使用条件类型、映射类型等高级特性编写更安全的代码。', author: '张伟', date: '2026-01-08', url: 'https://example.com/article/3' },
+        { title: 'CSS Grid 布局完全指南', summary: '从基础到高级，全面讲解 CSS Grid 布局系统，帮助你创建复杂的响应式网页布局。', author: '刘洋', date: '2026-01-07', url: 'https://example.com/article/4' },
+        { title: 'Vue 3 组合式 API 最佳实践', summary: '分享 Vue 3 组合式 API 的最佳实践，包括代码组织、状态管理、性能优化等实用技巧。', author: '陈静', date: '2026-01-06', url: 'https://example.com/article/5' }
+      ],
+      // 第2页
+      [
+        { title: 'Node.js 性能优化指南', summary: '全面分析 Node.js 应用的性能瓶颈，提供实用的优化策略和工具，提升服务器性能。', author: '赵强', date: '2026-01-05', url: 'https://example.com/article/6' },
+        { title: 'Webpack 5 配置详解', summary: '深入讲解 Webpack 5 的配置选项，包括模块联邦、持久化缓存等新特性的使用方法。', author: '孙娜', date: '2026-01-04', url: 'https://example.com/article/7' },
+        { title: 'GraphQL 入门到实战', summary: '从零开始学习 GraphQL，了解其核心概念，并通过实际项目掌握前后端的完整开发流程。', author: '周杰', date: '2026-01-03', url: 'https://example.com/article/8' },
+        { title: 'Docker 容器化最佳实践', summary: '分享 Docker 容器化的最佳实践，包括镜像优化、多阶段构建、安全配置等重要内容。', author: '吴敏', date: '2026-01-02', url: 'https://example.com/article/9' },
+        { title: 'MongoDB 高级查询技巧', summary: '掌握 MongoDB 的高级查询技巧，包括聚合管道、索引优化、查询性能分析等实用知识。', author: '郑涛', date: '2026-01-01', url: 'https://example.com/article/10' }
+      ],
+      // 第3页
+      [
+        { title: 'Redis 缓存策略深度解析', summary: '深入探讨 Redis 缓存的各种策略，包括缓存穿透、缓存雪崩的解决方案和最佳实践。', author: '马超', date: '2025-12-31', url: 'https://example.com/article/11' },
+        { title: 'Nginx 反向代理配置指南', summary: '全面讲解 Nginx 反向代理的配置方法，包括负载均衡、SSL 配置、性能调优等内容。', author: '黄莉', date: '2025-12-30', url: 'https://example.com/article/12' },
+        { title: 'Git 工作流最佳实践', summary: '介绍团队协作中的 Git 工作流最佳实践，包括分支管理、代码审查、版本发布等流程。', author: '林峰', date: '2025-12-29', url: 'https://example.com/article/13' },
+        { title: 'JWT 认证实现详解', summary: '详细讲解 JWT 认证机制的实现原理，包括令牌生成、验证、刷新等完整的认证流程。', author: '徐颖', date: '2025-12-28', url: 'https://example.com/article/14' },
+        { title: '微服务架构设计模式', summary: '探讨微服务架构的常见设计模式，包括服务发现、配置管理、断路器等核心概念。', author: '何军', date: '2025-12-27', url: 'https://example.com/article/15' }
+      ]
+    ];
+
+    let currentPage = 1;
+
+    function renderArticles() {
+      const articleList = document.getElementById('articleList');
+      articleList.innerHTML = '';
+      
+      const pageArticles = articles[currentPage - 1];
+      
+      pageArticles.forEach(article => {
+        const articleItem = document.createElement('div');
+        articleItem.className = 'article-item';
+        articleItem.innerHTML = `
+          <div class="article-title">${article.title}</div>
+          <div class="article-summary">${article.summary}</div>
+          <div class="article-meta">
+            <div>
+              <span class="article-author">${article.author}</span>
+              <span> · </span>
+              <span class="article-date">${article.date}</span>
+            </div>
+            <a href="${article.url}" class="article-link" target="_blank">阅读全文 →</a>
+          </div>
+        `;
+        articleList.appendChild(articleItem);
+      });
+
+      updatePagination();
+    }
+
+    function updatePagination() {
+      document.getElementById('currentPage').textContent = currentPage;
+      
+      // 更新按钮状态
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      
+      if (currentPage === 1) {
+        prevBtn.classList.add('disabled');
+      } else {
+        prevBtn.classList.remove('disabled');
+      }
+      
+      if (currentPage === 3) {
+        nextBtn.classList.add('disabled');
+      } else {
+        nextBtn.classList.remove('disabled');
+      }
+
+      // 更新页码按钮
+      const pageBtns = document.querySelectorAll('.pagination .page-btn:not(#prevBtn):not(#nextBtn)');
+      pageBtns.forEach((btn, index) => {
+        if (index + 1 === currentPage) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // 滚动到顶部
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderArticles();
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < 3) {
+        currentPage++;
+        renderArticles();
+      }
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderArticles();
+    }
+
+    // 初始化页面
+    renderArticles();
+  </script>
+</body>
+</html>

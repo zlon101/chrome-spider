@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>生成图标</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #1557b0;
+    }
+    .icon-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    .icon-item {
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .instructions {
+      background: #f0f7ff;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chrome 扩展图标生成器</h1>
+  
+  <div class="instructions">
+    <h3>使用说明：</h3>
+    <ol>
+      <li>点击下方按钮生成图标</li>
+      <li>右键点击每个图标，选择"图片另存为..."</li>
+      <li>分别保存为 icon16.png、icon48.png、icon128.png</li>
+      <li>将文件放入 chrome-spider/icons/ 文件夹</li>
+    </ol>
+  </div>
+
+  <button onclick="generateIcons()">生成所有图标</button>
+  <button onclick="downloadAll()">下载所有图标</button>
+
+  <div class="icon-container">
+    <div class="icon-item">
+      <h3>16x16</h3>
+      <canvas id="icon16" width="16" height="16"></canvas>
+    </div>
+    <div class="icon-item">
+      <h3>48x48</h3>
+      <canvas id="icon48" width="48" height="48"></canvas>
+    </div>
+    <div class="icon-item">
+      <h3>128x128</h3>
+      <canvas id="icon128" width="128" height="128"></canvas>
+    </div>
+  </div>
+
+  <script>
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const center = size / 2;
+      
+      // 清空画布
+      ctx.clearRect(0, 0, size, size);
+      
+      // 绘制背景圆
+      ctx.fillStyle = '#1a73e8';
+      ctx.beginPath();
+      ctx.arc(center, center, size * 0.47, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // 绘制蜘蛛网
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = Math.max(1, size / 32);
+      
+      // 中心到边缘的线（8条）
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.lineTo(
+          center + Math.cos(angle) * size * 0.4,
+          center + Math.sin(angle) * size * 0.4
+        );
+        ctx.stroke();
+      }
+      
+      // 同心圆环（3个）
+      [0.15, 0.27, 0.4].forEach(radius => {
+        ctx.beginPath();
+        ctx.arc(center, center, size * radius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      
+      // 绘制数据点
+      ctx.fillStyle = 'white';
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * Math.PI) / 4;
+        const x = center + Math.cos(angle) * size * 0.4;
+        const y = center + Math.sin(angle) * size * 0.4;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // 中心圆
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(center, center, size * 0.06, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#1a73e8';
+      ctx.beginPath();
+      ctx.arc(center, center, size * 0.03, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function generateIcons() {
+      ['icon16', 'icon48', 'icon128'].forEach(id => {
+        const canvas = document.getElementById(id);
+        drawIcon(canvas);
+      });
+    }
+
+    function downloadCanvas(canvas, filename) {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadAll() {
+      generateIcons();
+      setTimeout(() => {
+        downloadCanvas(document.getElementById('icon16'), 'icon16.png');
+      }, 100);
+      setTimeout(() => {
+        downloadCanvas(document.getElementById('icon48'), 'icon48.png');
+      }, 300);
+      setTimeout(() => {
+        downloadCanvas(document.getElementById('icon128'), 'icon128.png');
+      }, 500);
+    }
+
+    // 页面加载时自动生成图标
+    window.onload = generateIcons;
+  </script>
+</body>
+</html>

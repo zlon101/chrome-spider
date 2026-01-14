@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网页数据抓取器</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>网页数据抓取器</h1>
+    
+    <!-- 模式选择 -->
+    <div class="mode-selector">
+      <button id="normalMode" class="mode-btn active">普通页面</button>
+      <button id="listMode" class="mode-btn">列表页面</button>
+    </div>
+
+    <!-- 普通页面配置 -->
+    <div id="normalModePanel" class="panel active">
+      <h3>字段配置</h3>
+      <div class="help-text">格式: JSON 对象，键为字段名，值为 CSS 选择器</div>
+      <textarea id="normalConfig" placeholder='{
+  "姓名": "div.name",
+  "年龄": "span.age",
+  "邮箱": "a.email"
+}'></textarea>
+      <button id="scrapeNormal" class="btn-primary">开始抓取</button>
+      
+      <div id="normalResult" class="result-box" style="display: none;">
+        <h4>抓取结果:</h4>
+        <pre id="normalResultContent"></pre>
+        <button id="copyNormalResult" class="btn-secondary">复制结果</button>
+      </div>
+    </div>
+
+    <!-- 列表页面配置 -->
+    <div id="listModePanel" class="panel">
+      <h3>列表配置</h3>
+      <div class="help-text">配置列表项容器、翻页按钮、最大页数和字段选择器</div>
+      <textarea id="listConfig" placeholder='{
+  "container": ".article-item",
+  "next_button": "a.next-page",
+  "max_page": 3,
+  "field": {
+    "标题": "h2.title",
+    "摘要": "p.summary",
+    "链接": "a.detail@href"
+  }
+}'></textarea>
+      <div class="help-text">提示: container 为列表项容器选择器（推荐指定），获取属性值使用 @属性名，如 a.link@href</div>
+      <button id="scrapeList" class="btn-primary">开始抓取列表</button>
+      
+      <div id="listProgress" class="progress-box" style="display: none;">
+        <div class="progress-text">
+          <span>正在抓取第 <span id="currentPage">1</span> 页...</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div id="listResult" class="result-box" style="display: none;">
+        <h4>抓取完成!</h4>
+        <p>共抓取 <span id="totalItems">0</span> 条数据</p>
+        <button id="downloadList" class="btn-primary">下载 JSON 文件</button>
+        <button id="copyListResult" class="btn-secondary">复制结果</button>
+        <details>
+          <summary>查看数据预览</summary>
+          <pre id="listResultContent"></pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- 状态显示 -->
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

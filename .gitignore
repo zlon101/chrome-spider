@@ -1,0 +1,39 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Thumbnails
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node modules (if using build tools in future)
+node_modules/
+
+# Build output (if adding build process in future)
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Package files
+*.zip
+*.crx
+*.pem

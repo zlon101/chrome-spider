@@ -1,0 +1,116 @@
+chrome-spider/
+│
+├── manifest.json                 # Chrome 扩展配置文件
+├── README.md                     # 项目入口导航文档
+├── .gitignore                    # Git 忽略配置
+├── RESTRUCTURE_SUMMARY.md        # 重构说明文档
+│
+├── src/                          # 📦 源代码目录
+│   │
+│   ├── popup/                    # 🎨 用户界面（弹出窗口）
+│   │   ├── popup.html           # 弹窗页面结构
+│   │   ├── popup.css            # 弹窗页面样式
+│   │   └── popup.js             # 弹窗页面逻辑
+│   │
+│   ├── scripts/                  # ⚙️ 核心功能脚本
+│   │   ├── content.js           # 内容脚本（数据抓取核心）
+│   │   └── background.js        # 后台服务工作进程
+│   │
+│   └── assets/                   # 🖼️ 静态资源文件
+│       └── icons/               # 扩展图标
+│           ├── icon16.png      # 16x16 工具栏图标
+│           ├── icon48.png      # 48x48 管理页图标
+│           ├── icon128.png     # 128x128 商店图标
+│           ├── icon.svg        # SVG 源文件
+│           └── ICON_GUIDE.md   # 图标生成指南
+│
+├── docs/                         # 📚 文档目录
+│   ├── README.md                # 完整使用文档
+│   ├── QUICK_START.md           # 快速入门指南（5分钟上手）
+│   ├── CONTAINER_GUIDE.md       # Container 配置详解（必读）
+│   ├── CHECKLIST.md             # 安装检查清单
+│   ├── PROJECT_OVERVIEW.md      # 项目技术概览
+│   ├── DIRECTORY_STRUCTURE.md   # 目录结构详细说明
+│   ├── CHANGELOG.md             # 版本更新历史
+│   └── UPDATE_SUMMARY.md        # 最新更新总结
+│
+├── tests/                        # 🧪 测试文件目录
+│   ├── test-normal-page.html    # 普通页面抓取测试
+│   └── test-list-page.html      # 列表页面抓取测试（含翻页）
+│
+└── tools/                        # 🛠️ 开发辅助工具
+    └── generate-icons.html      # 图标一键生成工具
+
+
+📖 文档阅读顺序（推荐）
+═══════════════════════════
+
+新用户：
+  1. README.md (根目录) → 快速了解项目
+  2. docs/QUICK_START.md → 5分钟上手
+  3. docs/CHECKLIST.md → 安装验证
+  4. docs/CONTAINER_GUIDE.md → 掌握核心功能
+
+开发者：
+  1. docs/DIRECTORY_STRUCTURE.md → 了解结构
+  2. docs/PROJECT_OVERVIEW.md → 技术架构
+  3. docs/README.md → 功能详解
+
+
+🎯 快速定位指南
+═══════════════
+
+想修改界面？     → src/popup/
+想修改功能逻辑？  → src/scripts/
+想更换图标？     → src/assets/icons/
+想查看文档？     → docs/
+想运行测试？     → tests/
+想使用工具？     → tools/
+
+
+🔗 关键文件用途
+═══════════════
+
+manifest.json           扩展配置，定义权限和文件路径
+README.md (根)         项目导航，快速查找所需内容
+src/popup/popup.html   用户看到的界面
+src/scripts/content.js 页面数据抓取的核心逻辑
+docs/README.md         详细使用说明
+docs/CONTAINER_GUIDE.md 列表抓取关键知识
+
+
+⚡ 命令速查
+═══════════
+
+# 安装扩展
+chrome://extensions/ → 开发者模式 → 加载已解压的扩展程序
+
+# 生成图标
+在浏览器打开: tools/generate-icons.html
+
+# 运行测试
+在浏览器打开: tests/test-normal-page.html
+在浏览器打开: tests/test-list-page.html
+
+# 刷新扩展（代码修改后）
+chrome://extensions/ → 找到扩展 → 点击刷新按钮
+
+
+📊 目录功能分类
+═══════════════
+
+运行时必需：
+  ├─ manifest.json
+  ├─ src/popup/
+  ├─ src/scripts/
+  └─ src/assets/icons/
+
+开发辅助：
+  ├─ docs/        (帮助理解和使用)
+  ├─ tests/       (功能验证)
+  └─ tools/       (开发工具)
+
+项目管理：
+  ├─ README.md
+  ├─ .gitignore
+  └─ RESTRUCTURE_SUMMARY.md

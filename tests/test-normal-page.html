@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试页面 - 普通页面</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .profile {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: #1a73e8;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: bold;
+    }
+    .info {
+      flex: 1;
+    }
+    .name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .age, .email, .phone, .address {
+      margin: 8px 0;
+      color: #666;
+    }
+    .label {
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .instructions {
+      background: #e8f4fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 30px;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #1a73e8;
+    }
+    .instructions pre {
+      background: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .link {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>用户信息</h1>
+    
+    <div class="profile">
+      <div class="avatar" data-avatar="user-avatar.jpg">张</div>
+      <div class="info">
+        <div class="name">张三</div>
+        <div class="age"><span class="label">年龄：</span><span>28岁</span></div>
+        <div class="email"><span class="label">邮箱：</span><a href="mailto:zhangsan@example.com" class="link">zhangsan@example.com</a></div>
+        <div class="phone"><span class="label">电话：</span>138-1234-5678</div>
+        <div class="address"><span class="label">地址：</span>北京市朝阳区某某街道123号</div>
+        <div class="website"><span class="label">网站：</span><a href="https://example.com/zhangsan" class="link" target="_blank">https://example.com/zhangsan</a></div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h3>测试配置（普通页面）</h3>
+      <p>在扩展中使用以下配置来抓取此页面的数据：</p>
+      <pre>{
+  "姓名": ".name",
+  "年龄": ".age span:last-child",
+  "邮箱": ".email a",
+  "邮箱链接": ".email a@href",
+  "电话": ".phone",
+  "地址": ".address",
+  "网站": ".website a@href"
+}</pre>
+      
+      <h3>预期结果：</h3>
+      <pre>{
+  "姓名": "张三",
+  "年龄": "28岁",
+  "邮箱": "zhangsan@example.com",
+  "邮箱链接": "mailto:zhangsan@example.com",
+  "电话": "电话：138-1234-5678",
+  "地址": "地址：北京市朝阳区某某街道123号",
+  "网站": "https://example.com/zhangsan"
+}</pre>
+    </div>
+  </div>
+</body>
+</html>
