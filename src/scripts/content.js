@@ -10,9 +10,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const result = scrapeListPage(request.config, request.container);
     sendResponse(result);
     return true;
+  } else if (request.action === 'scrapeDetailFields') {
+    // 抓取详情页字段（被 background.js 调用）
+    console.log('收到 scrapeDetailFields 请求，字段配置:', request.fields);
+    try {
+      const result = scrapeNormalPage(request.fields);
+      console.log('详情页抓取结果:', result);
+      sendResponse(result);
+    } catch (error) {
+      console.error('详情页抓取错误:', error);
+      sendResponse({ error: error.message });
+    }
+    return true;
   } else if (request.action === 'clickNext') {
     // 点击下一页按钮
     const result = clickNextButton(request.selector);
+    sendResponse(result);
+    return true;
+  } else if (request.action === 'getDetailLinks') {
+    // 获取所有详情页链接
+    const result = getDetailLinks(request.container, request.linkSelector);
     sendResponse(result);
     return true;
   }
@@ -21,6 +38,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // 抓取普通页面数据
 function scrapeNormalPage(config) {
   try {
+    console.log('开始抓取页面数据，配置:', config);
+    console.log('当前页面 URL:', window.location.href);
+    
     const data = {};
     
     for (const [fieldName, selector] of Object.entries(config)) {
@@ -34,23 +54,30 @@ function scrapeNormalPage(config) {
         attribute = parts[1];
       }
       
+      console.log(`查找字段 "${fieldName}"，选择器: ${actualSelector}${attribute ? ', 属性: ' + attribute : ''}`);
+      
       const element = document.querySelector(actualSelector);
       
       if (element) {
         if (attribute) {
           // 获取属性值
           data[fieldName] = element.getAttribute(attribute) || '';
+          console.log(`  找到元素，属性值: ${data[fieldName]}`);
         } else {
           // 获取文本内容
           data[fieldName] = element.textContent.trim();
+          console.log(`  找到元素，文本内容: ${data[fieldName].substring(0, 50)}...`);
         }
       } else {
         data[fieldName] = null;
+        console.log(`  未找到元素`);
       }
     }
     
+    console.log('页面数据抓取完成:', data);
     return { data };
   } catch (error) {
+    console.error('抓取页面数据错误:', error);
     return { error: error.message };
   }
 }
@@ -114,6 +141,61 @@ function scrapeListPage(fieldConfig, containerSelector) {
     
   } catch (error) {
     return { error: error.message };
+  }
+}
+
+// 获取详情页链接
+function getDetailLinks(containerSelector, linkSelector) {
+  try {
+    console.log('获取详情链接，容器:', containerSelector, '链接选择器:', linkSelector);
+    
+    const links = [];
+    const listItems = document.querySelectorAll(containerSelector);
+    
+    if (listItems.length === 0) {
+      return { 
+        links: [], 
+        error: `未找到匹配的列表项容器: ${containerSelector}` 
+      };
+    }
+    
+    console.log(`找到 ${listItems.length} 个列表项`);
+    
+    for (const listItem of listItems) {
+      let actualSelector = linkSelector;
+      let attribute = null;
+      
+      if (linkSelector.includes('@')) {
+        const parts = linkSelector.split('@');
+        actualSelector = parts[0];
+        attribute = parts[1] || 'href';
+      } else {
+        attribute = 'href';
+      }
+      
+      const element = listItem.querySelector(actualSelector);
+      
+      if (element) {
+        let url = element.getAttribute(attribute);
+        
+        // 处理相对路径
+        if (url && !url.startsWith('http')) {
+          url = new URL(url, window.location.href).href;
+        }
+        
+        console.log(`  找到链接: ${url}`);
+        links.push(url || null);
+      } else {
+        console.log(`  未找到链接元素，选择器: ${actualSelector}`);
+        links.push(null);
+      }
+    }
+    
+    console.log(`总共获取 ${links.length} 个链接`);
+    return { links };
+  } catch (error) {
+    console.error('获取详情链接错误:', error);
+    return { links: [], error: error.message };
   }
 }
 

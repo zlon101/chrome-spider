@@ -42,18 +42,34 @@
   "container": ".article-item",
   "next_button": "a.next-page",
   "max_page": 3,
-  "field": {
+  "list_fields": {
     "标题": "h2.title",
-    "摘要": "p.summary",
-    "链接": "a.detail@href"
+    "摘要": "p.summary"
+  },
+  "detail_config": {
+    "link_selector": "a.detail@href",
+    "wait_time": 2000,
+    "detail_fields": {
+      "正文": "article.content",
+      "作者": ".author"
+    }
   }
 }'></textarea>
-      <div class="help-text">提示: container 为列表项容器选择器（推荐指定），获取属性值使用 @属性名，如 a.link@href</div>
+      <div class="help-text">
+        <strong>list_fields</strong>: 列表字段（可选）<br>
+        <strong>detail_config</strong>: 详情页配置（可选）<br>
+        - <strong>link_selector</strong>: 详情链接选择器<br>
+        - <strong>wait_time</strong>: 页面等待时间(ms)<br>
+        - <strong>detail_fields</strong>: 详情页字段配置
+      </div>
       <button id="scrapeList" class="btn-primary">开始抓取列表</button>
       
       <div id="listProgress" class="progress-box" style="display: none;">
         <div class="progress-text">
-          <span>正在抓取第 <span id="currentPage">1</span> 页...</span>
+          <span id="progressText">正在抓取第 <span id="currentPage">1</span> 页...</span>
+        </div>
+        <div class="progress-text" id="detailProgress" style="display: none;">
+          <span>详情页: <span id="currentDetail">0</span> / <span id="totalDetail">0</span></span>
         </div>
         <div class="progress-bar">
           <div id="progressFill" class="progress-fill"></div>
