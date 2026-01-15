@@ -36,12 +36,15 @@
 
     <!-- 列表页面配置 -->
     <div id="listModePanel" class="panel">
-      <h3>列表配置</h3>
-      <div class="help-text">配置列表项容器、翻页按钮、最大页数和字段选择器</div>
-      <textarea id="listConfig" placeholder='{
+  <h3>列表配置</h3>
+  <!-- 修改帮助文本 -->
+  <div class="help-text">配置列表项容器、翻页按钮、最大抓取数量和字段选择器</div>
+  
+  <!-- 修改 placeholder，将 max_page 改为 max_items -->
+  <textarea id="listConfig" placeholder='{
   "container": ".article-item",
   "next_button": "a.next-page",
-  "max_page": 3,
+  "max_items": 5,
   "list_fields": {
     "标题": "h2.title",
     "摘要": "p.summary"

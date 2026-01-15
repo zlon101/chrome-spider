@@ -1,0 +1,17 @@
+{
+  "container": ".q-list-page.p-0.list-group-item",
+  "next_button": ".next-page",
+  "max_items": 2,
+  "list_fields": {
+    "标题": "a.text-body",
+    "阅读": ".num-card span.font-size-16"
+  },
+  "detail_config": {
+    "link_selector": "a.text-body@href",
+    "wait_time": 1500,
+    "detail_fields": {
+      "姓名": "strong.font-size-14",
+      "地址": "span.font-size-14.text-secondary"
+    }
+  }
+}

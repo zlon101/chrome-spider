@@ -57,7 +57,7 @@ function showStatus(message, type = 'info', timeout = 3000) {
 // 普通页面抓取
 scrapeNormalBtn.addEventListener('click', async () => {
   const configText = normalConfigInput.value.trim();
-  
+
   if (!configText) {
     showStatus('请输入字段配置', 'error');
     return;
@@ -65,7 +65,7 @@ scrapeNormalBtn.addEventListener('click', async () => {
 
   try {
     const config = JSON.parse(configText);
-    
+
     if (typeof config !== 'object' || Array.isArray(config)) {
       showStatus('配置格式错误：应为对象格式', 'error');
       return;
@@ -111,7 +111,7 @@ copyNormalResultBtn.addEventListener('click', () => {
 // 列表页面抓取（支持详情页）
 scrapeListBtn.addEventListener('click', async () => {
   const configText = listConfigInput.value.trim();
-  
+
   if (!configText) {
     showStatus('请输入列表配置', 'error');
     return;
@@ -119,23 +119,24 @@ scrapeListBtn.addEventListener('click', async () => {
 
   try {
     const config = JSON.parse(configText);
-    
+
     // 验证配置
     if (!config.container) {
       showStatus('配置错误：需要 container 字段', 'error');
       return;
     }
-    
+
     // 检查是否为详情模式
     const hasDetail = config.detail_config && config.detail_config.detail_fields;
     const hasListFields = config.list_fields && Object.keys(config.list_fields).length > 0;
-    
+
     if (!hasListFields && !hasDetail) {
       showStatus('配置错误：需要 list_fields 或 detail_config 至少一个', 'error');
       return;
     }
 
-    const maxPage = config.max_page || 10;
+    // --- 修改点 1: 获取 max_items，默认为 50 ---
+    const maxItems = config.max_items || 50;
     const container = config.container;
 
     scrapeListBtn.disabled = true;
@@ -148,127 +149,130 @@ scrapeListBtn.addEventListener('click', async () => {
     // 获取当前标签页
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // 开始抓取
-    for (let page = 1; page <= maxPage; page++) {
-      currentPageSpan.textContent = page;
-      progressText.textContent = `正在抓取第 ${page} 页...`;
-      progressFill.style.width = `${(page / maxPage) * 100}%`;
+    let currentPageNum = 1;
+
+    // --- 修改点 2: 循环条件改为数据量判断 ---
+    while (listData.length < maxItems) {
+      currentPageSpan.textContent = currentPageNum;
+      // 进度条逻辑调整：无法预知总页数，暂时用已抓取/目标数量来显示
+      const progressPercent = Math.min((listData.length / maxItems) * 100, 95);
+      progressText.textContent = `正在抓取第 ${currentPageNum} 页 (已获取 ${listData.length}/${maxItems} 条)...`;
+      progressFill.style.width = `${progressPercent}%`;
 
       let pageData = [];
+      let combinedResults = [];
 
-      // 1. 抓取列表字段（如果配置了）
-      if (hasListFields) {
-        const listResults = await chrome.tabs.sendMessage(tab.id, {
-          action: 'scrapeList',
-          config: config.list_fields,
-          container: container
-        });
+      // --- 修改开始：使用原子化抓取 ---
 
-        if (listResults.error) {
-          showStatus(`第 ${page} 页列表抓取失败：${listResults.error}`, 'error');
-          break;
-        }
+      // 1. 发送合并抓取请求
+      const scrapeResult = await chrome.tabs.sendMessage(tab.id, {
+        action: 'scrapeCombinedList',
+        config: config.list_fields,
+        container: container,
+        linkSelector: config.detail_config ? config.detail_config.link_selector : null
+      });
 
-        pageData = listResults.data || [];
+      if (scrapeResult.error) {
+        showStatus(`第 ${currentPageNum} 页抓取失败：${scrapeResult.error}`, 'error');
+        break;
       }
 
-      // 2. 抓取详情页数据（如果配置了）
+      combinedResults = scrapeResult.data || [];
+      // 此时 combinedResults 结构为: [{ list_data: {...}, detail_link: "url" }, ...]
+      // 数据已经绝对绑定，不会错位
+
+      // 2. 处理详情页 (如果有配置且有链接)
       if (hasDetail) {
-        progressText.textContent = `正在抓取第 ${page} 页的详情...`;
-        
-        // 获取详情页链接
-        const linksResult = await chrome.tabs.sendMessage(tab.id, {
-          action: 'getDetailLinks',
-          container: container,
-          linkSelector: config.detail_config.link_selector
-        });
-
-        if (linksResult.error) {
-          showStatus(`获取详情链接失败：${linksResult.error}`, 'error');
-          break;
+        // 计算还需要抓取多少条 (逻辑同之前)
+        const itemsNeeded = maxItems - listData.length;
+        if (combinedResults.length > itemsNeeded) {
+          combinedResults = combinedResults.slice(0, itemsNeeded);
         }
 
-        const detailLinks = linksResult.links || [];
-        totalDetailSpan.textContent = detailLinks.length;
+        totalDetailSpan.textContent = combinedResults.filter(r => r.detail_link).length;
 
-        // 如果没有列表字段，初始化 pageData
-        if (!hasListFields) {
-          pageData = detailLinks.map(() => ({}));
-        }
-
-        // 抓取每个详情页
-        for (let i = 0; i < detailLinks.length; i++) {
-          const url = detailLinks[i];
+        // 遍历刚才抓到的结果
+        for (let i = 0; i < combinedResults.length; i++) {
+          const item = combinedResults[i];
           currentDetailSpan.textContent = i + 1;
 
-          if (!url) {
-            console.log(`第 ${i + 1} 项没有详情链接，跳过`);
-            continue;
-          }
+          // 初始化最终数据对象，先放入列表数据
+          let finalItemData = { ...item.list_data };
 
-          try {
-            // 通过 background 打开新标签页抓取
-            const detailResult = await chrome.runtime.sendMessage({
-              action: 'openDetailTab',
-              url: url,
-              fields: config.detail_config.detail_fields,
-              waitTime: config.detail_config.wait_time || 2000,
-              maxRetries: 3
-            });
+          // 如果有链接，去抓详情
+          if (item.detail_link) {
+            try {
+              const detailResult = await chrome.runtime.sendMessage({
+                action: 'openDetailTab',
+                url: item.detail_link,
+                fields: config.detail_config.detail_fields,
+                waitTime: config.detail_config.wait_time || 2000
+              });
 
-            if (detailResult.success && detailResult.data) {
-              // 合并列表数据和详情数据
-              pageData[i] = {
-                ...pageData[i],
-                ...detailResult.data,
-                _detail_url: url
-              };
-            } else {
-              console.error(`详情页抓取失败 [${i + 1}]:`, detailResult.error);
-              pageData[i] = {
-                ...pageData[i],
-                _detail_url: url,
-                _detail_error: detailResult.error
-              };
+              if (detailResult.success) {
+                // 合并详情数据
+                finalItemData = { ...finalItemData, ...detailResult.data };
+                finalItemData._detail_url = item.detail_link;
+              } else {
+                finalItemData._detail_error = detailResult.error;
+              }
+            } catch (err) {
+              finalItemData._detail_error = err.message;
             }
-          } catch (error) {
-            console.error(`详情页抓取异常 [${i + 1}]:`, error);
-            pageData[i] = {
-              ...pageData[i],
-              _detail_url: url,
-              _detail_error: error.message
-            };
+          } else {
+            // 这一项没有链接（可能是因为没匹配到，或者本来就没有）
+            console.log(`第 ${i + 1} 项无详情链接，仅保留列表数据`);
           }
 
-          // 添加小延迟，避免过快
-          await sleep(500);
+          // 将完成的一条数据推入本页结果
+          pageData.push(finalItemData);
+
+          // 简单的防封禁延迟
+          if (item.detail_link) await sleep(500);
         }
+      } else {
+        // 如果不需要抓详情，直接提取 list_data
+        pageData = combinedResults.map(r => r.list_data);
       }
 
+      // --- 修改结束 ---
+
+      // 将本页数据加入总结果
       listData.push(...pageData);
 
-      // 3. 翻页（如果不是最后一页）
-      if (page < maxPage && config.next_button) {
+      // --- 修改点 4: 判断是否需要翻页 ---
+      // 如果已经达到或超过目标数量，停止循环
+      if (listData.length >= maxItems) {
+        break;
+      }
+
+      // 3. 翻页
+      if (config.next_button) {
         const nextResult = await chrome.tabs.sendMessage(tab.id, {
           action: 'clickNext',
           selector: config.next_button
         });
 
         if (!nextResult.success) {
-          showStatus(`已完成 ${page} 页抓取（无法找到下一页按钮）`, 'info');
+          showStatus(`已完成 ${currentPageNum} 页抓取（无法找到下一页按钮）`, 'info');
           break;
         }
 
         // 等待页面加载
+        currentPageNum++;
         await sleep(2000);
+      } else {
+        // 如果没有配置下一页按钮，只抓一页就退出
+        break;
       }
     }
 
     // 显示结果
+    progressFill.style.width = '100%';
     listProgressBox.style.display = 'none';
     listResultBox.style.display = 'block';
     totalItemsSpan.textContent = listData.length;
-    listResultContent.textContent = JSON.stringify(listData.slice(0, 3), null, 2) + 
+    listResultContent.textContent = JSON.stringify(listData.slice(0, 3), null, 2) +
       (listData.length > 3 ? '\n\n... 更多数据请下载查看' : '');
     showStatus('列表抓取完成！', 'success');
 
@@ -286,7 +290,7 @@ downloadListBtn.addEventListener('click', () => {
   const dataStr = JSON.stringify(listData, null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
   const filename = `scraped-data-${timestamp}.json`;
 
